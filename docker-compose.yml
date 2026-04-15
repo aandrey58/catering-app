@@ -1,0 +1,33 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      APP_HOST: 0.0.0.0
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      JWT_EXPIRE_DAYS: ${JWT_EXPIRE_DAYS:-30}
+      SEED_ADMIN_LOGIN: ${SEED_ADMIN_LOGIN:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_ADMIN_NOTE: ${SEED_ADMIN_NOTE:-Admin}
+      DATABASE_URL: sqlite:///./data/catering.db
+      SPREADSHEET_ID: ${SPREADSHEET_ID:-}
+      SHEETS_SYNC_TOKEN: ${SHEETS_SYNC_TOKEN:-}
+    volumes:
+      - catering_data:/app/data
+      - ${SERVICE_ACCOUNT_PATH:-./backend/service_account.json}:/app/service_account.json:ro
+    expose:
+      - "8000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  catering_data:
